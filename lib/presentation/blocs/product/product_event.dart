@@ -6,3 +6,11 @@ class FetchProductEvent extends ProductEvent  {
   FetchProductEvent({required this.page});
   
 }
+
+class FetchProductCategoryEvent extends ProductEvent {
+}
+
+class SelectProductCategoryEvent extends ProductEvent {
+  final int index;
+  SelectProductCategoryEvent({required this.index});
+}
