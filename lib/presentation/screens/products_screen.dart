@@ -1,3 +1,5 @@
+import 'package:catalogue_project/core/constants.dart';
+import 'package:catalogue_project/domain/models/product_category_model.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_bloc.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_event.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_state.dart';
@@ -16,30 +18,24 @@ class ProductScreen extends StatefulWidget {
 
 class _ProductScreenState extends State<ProductScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool _isLoading = false;
-
   int _selectedCategoryIndex = 0;
+  List<ProductCategoryModel> _categories = [];
+  bool isLoadMore = true;
 
   @override
   void initState() {
-    BlocProvider.of<ProductBloc>(context).add(FetchProductCategoryEvent());
-    _scrollController.addListener(_scrollListener);
     super.initState();
+    // Fetch initial categories and products
+    BlocProvider.of<ProductBloc>(context).add(FetchProductDataEvent());
+
+    // Add scroll listener for pagination
+    _scrollController.addListener(_scrollListener);
   }
 
   void _scrollListener() {
     if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent &&
-      !_isLoading) {
-    setState(() => _isLoading = true);
-
-    // Simulate fetching more data
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-        // Append more items to your product list
-      });
-    });
+        _scrollController.position.maxScrollExtent) {
+          if (isLoadMore) BlocProvider.of<ProductBloc>(context).add(FetchMorePorductsEvent());
     }
   }
 
@@ -48,94 +44,124 @@ class _ProductScreenState extends State<ProductScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
-        child: Stack(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 18.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Catalogue",
-                        style: GoogleFonts.nunito(
-                          fontSize: 42.0,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.shopping_cart),
-                        color: Colors.black87,
-                        tooltip: '0',
-                        iconSize: 28.0,
-                      )
-                    ],
-                  ),
-                ),
-            
-                // BlocConsumer for dynamic categories
-                BlocBuilder<ProductBloc, ProductState>(
-                  builder: (context, state) {
-                    if (state is ProductCategoriesLoaded) {
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: SizedBox(
-                          height: 50.0,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: state.categories.length,
-                            itemBuilder: (context, index) {
-                              return CategoryWidget(
-                                text: state.categories[index].name, 
-                                isSelected: (index == _selectedCategoryIndex),
-                                index: index,
-                                onSelected: (selectedIndex) {
-                                  setState(() => _selectedCategoryIndex = selectedIndex);
-                                  // Fetch Products By Category
-                                },
-                                 );
-                            },
-                          ),
-                        ),
-                      );
-                    } else {
-                      return const SizedBox(height: 50.0,);
-                    }
-                  },
-                ),
-            
-            
-                // GridView for products
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 30.0, left: 12.0, right: 12.0),
-                    child: GridView.builder(
-                      scrollDirection: Axis.vertical,
-                      controller: _scrollController,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 4.0,
-                        crossAxisSpacing:4.0,
-                        childAspectRatio: 0.6
-                      ),
-                      itemCount: 10, // Replace with the product list length
-                      itemBuilder: (context, index) {
-                        return const ProductWidget();
-                      },
+            // App Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 18.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Catalogue",
+                    style: GoogleFonts.nunito(
+                      fontSize: 42.0,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
-                ),
-              ],
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(Icons.shopping_cart),
+                    color: Colors.black87,
+                    tooltip: '0',
+                    iconSize: 28.0,
+                  )
+                ],
+              ),
             ),
+
+            // Category List
+            BlocListener<ProductBloc, ProductState>(
+              listener: (context, state) {
+                if (state is ProductCategoriesLoaded) {
+                  setState(() {
+                    _categories = state.categories;
+                  });
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: SizedBox(
+                  height: 50.0,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      return CategoryWidget(
+                        text: _categories[index].name,
+                        isSelected: (index == _selectedCategoryIndex),
+                        index: index,
+                        onSelected: (selectedIndex) {
+                          setState(() => _selectedCategoryIndex = selectedIndex);
+                          isLoadMore = selectedIndex == 0;
+                          if(selectedIndex == 0){
+                            BlocProvider.of<ProductBloc>(context).add(
+                            FetchProductDataEvent(),
+                          );
+                          } else {
+                            BlocProvider.of<ProductBloc>(context).add(
+                            FetchProductsByCategory(url: _categories[selectedIndex].url ?? baseUrl),
+                          );
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+
+            // Product Grid
+            Expanded(
+              child: BlocBuilder<ProductBloc, ProductState>(
+                builder: (context, state) {
+                  if (state is ProductsLoaded) {
+                    return Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: GridView.builder(
+                        controller: _scrollController,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 4.0,
+                          crossAxisSpacing: 4.0,
+                          childAspectRatio: 0.55,
+                        ),
+                        itemCount: state.products.length,
+                        itemBuilder: (context, index) {
+                          return ProductWidget(product: state.products[index]);
+                        },
+                      ),
+                    );
+                  } else if (state is ProductsLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is ProductsError) {
+                    return Center(
+                      child: Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    );
+                  } else {
+                    return const Center(
+                      child: Text("No products available"),
+                    );
+                  }
+                },
+              ),
+            ),
+
           ],
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 }
-
-

@@ -1,9 +1,8 @@
 class ProductModel {
-
   int? id;
   String? title;
   String? description;
-  String? image;
+  List<String>? images;
   String? thumbnail;
   String? brand;
   double? price;
@@ -14,39 +13,47 @@ class ProductModel {
     required this.id,
     required this.title,
     required this.description,
-    required this.image,
+    required this.images,
     required this.thumbnail,
     required this.price,
     required this.brand,
     required this.discountPercentage,
-    required this.rating
+    required this.rating,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: json['id'],
-      title: json['title'], 
-      description: json['description'], 
-      image: json['images'], 
-      thumbnail: json['thumbnail'], 
-      price: json['price'],
+      title: json['title'],
+      description: json['description'],
+      images: (json['images'] as List<dynamic>).map((e) => e.toString()).toList(),
+      thumbnail: json['thumbnail'],
+      price: _toDouble(json['price']),
       brand: json['brand'],
-      discountPercentage: json['discountPercentage'], 
-      rating: json['rating']);
+      discountPercentage: _toDouble(json['discountPercentage']),
+      rating: _toDouble(json['rating']),
+    );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'tite': title,
-      'description': description, 
-      'images': image, 
-      'thumbnail': thumbnail, 
+      'title': title,
+      'description': description,
+      'images': images,
+      'thumbnail': thumbnail,
       'price': price,
-      'discountPercentage': discountPercentage, 
+      'discountPercentage': discountPercentage,
       'rating': rating,
-      'brand': brand
+      'brand': brand,
     };
   }
 
-} 
+  // Helper method to convert dynamic to double
+  static double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+}

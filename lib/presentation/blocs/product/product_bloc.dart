@@ -5,42 +5,89 @@ import 'package:catalogue_project/presentation/blocs/product/product_event.dart'
 import 'package:catalogue_project/presentation/blocs/product/product_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ProductBloc extends Bloc<ProductEvent, ProductState>{
-
+class ProductBloc extends Bloc<ProductEvent, ProductState> {
   final ProductRepository productRepo;
 
-  int selectedCategoryIndex = 0;
+  int page = 1;
+  bool isFetchingMore = false;
 
-  ProductBloc({required this.productRepo}) :super (ProductsLoading()) {
-    on<FetchProductEvent>(_onFetchProductEvent);
-    on<FetchProductCategoryEvent>(_onFetchProductCategoryEvent);
-    on<SelectProductCategoryEvent>(_onSelectProductCategoryEvent);
+  ProductBloc({required this.productRepo}) : super(ProductsLoading()) {
+    on<FetchProductDataEvent>(_onFetchProductDataEvent);
+    on<FetchMorePorductsEvent>(_onFetchMoreProductsEvent);
+    on<FetchProductsByCategory>(_onFetchProductsByCategory);
   }
 
-  _onFetchProductEvent(FetchProductEvent event, Emitter<ProductState> emit) async {
+  /// Handles fetching initial categories and products
+  Future<void> _onFetchProductDataEvent(
+      FetchProductDataEvent event, Emitter<ProductState> emit) async {
+        emit(ProductsLoading());
+        emit(ProductCategoriesLoading());
+    try {
 
-    emit(ProductsLoading());
+      // Fetch categories
+      final categories = await productRepo.getProductCategories();
+      if (categories.isEmpty) {
+        emit(ProductsError(message: "No categories available"));
+        return;
+      }
+      categories.insert(0, ProductCategoryModel(name: "All", url: baseUrl));
+      emit(ProductCategoriesLoaded(categories: categories));
 
-    final products = await productRepo.getProducts(0);
-    if(products.isEmpty) {
-      emit(ProductsError(message: "Empty List"));
+      // Fetch products
+      final products = await productRepo.getProducts(page);
+      if (products.isEmpty) {
+        emit(ProductsError(message: "No products available"));
+        return;
+      }
+      emit(ProductsLoaded(products: products));
+      page++;
+    } catch (error) {
+      emit(ProductsError(message: "Failed to load data: $error"));
     }
-    emit(ProductsLoaded(products: products));
   }
 
-  _onSelectProductCategoryEvent(SelectProductCategoryEvent event, Emitter<ProductState> emit){
-    emit(SelectedProductCategory(index: event.index));
-  }
-
-  _onFetchProductCategoryEvent(FetchProductCategoryEvent event, Emitter<ProductState> emit) async {
-    emit(ProductCategoriesLoading());
-
-    final categories = await productRepo.getProductCategories();
-    if(categories.isEmpty) {
-      emit(ProductsError(message: "Empty List"));
+  Future<void> _onFetchProductsByCategory(FetchProductsByCategory event, Emitter<ProductState> emit) async {
+    // Reset page and fetch products for the selected category
+    page  = 1;
+    try {
+      // Fetch products by categories
+      final products = await productRepo.getProductsByCategory(event.url);
+      if (products.isEmpty) {
+        emit(ProductsError(message: "No products available"));
+        return;
+      }
+      emit(ProductsLoaded(products: products));
+    } catch (error) {
+      emit(ProductsError(message: "Failed to load data: $error"));
     }
-    categories.insert(0, ProductCategoryModel(name: "All", url: baseUrl));
-    emit(ProductCategoriesLoaded(categories: categories));
+
   }
-    
+
+  /// Handles fetching more products (pagination)
+  Future<void> _onFetchMoreProductsEvent(
+      FetchMorePorductsEvent event, Emitter<ProductState> emit) async {
+    if (isFetchingMore) return; // Prevent multiple triggers
+    isFetchingMore = true;
+    try {
+      final products = await productRepo.getProducts(page);
+      if (products.isEmpty) {
+        emit(ProductsError(message: "No more products available"));
+        isFetchingMore = false;
+        return;
+      }
+
+      // Append new products to the current state
+      if (state is ProductsLoaded) {
+        final currentProducts = (state as ProductsLoaded).products;
+        emit(ProductsLoaded(products: [...currentProducts, ...products]));
+      } else {
+        emit(ProductsLoaded(products: products));
+      }
+      page++;
+    } catch (error) {
+      emit(ProductsError(message: "Failed to load more products: $error"));
+    } finally {
+      isFetchingMore = false;
+    }
+  }
 }

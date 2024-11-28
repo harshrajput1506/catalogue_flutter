@@ -39,4 +39,21 @@ class ProductRepositoryImpl extends ProductRepository {
       throw Exception('Failed to fetch categories : ${e.toString()}');
     }
   }
+  
+  @override
+  Future<List<ProductModel>> getProductsByCategory(String url) async {
+    try {
+      Uri uri = Uri.parse(url);
+      final response = await http.get(uri);
+      if(response.statusCode == 200){
+        final data = jsonDecode(response.body);
+        List<ProductModel> list = (data['products'] as List).map((product) => ProductModel.fromJson(product)).toList();
+        return list;
+      } else {
+        throw Exception('Server error, code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load products: ${e.toString()}'); 
+    }
+  }
 }

@@ -1,101 +1,157 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:catalogue_project/domain/models/product_model.dart';
 
 class ProductWidget extends StatelessWidget {
-  const ProductWidget({super.key});
+  final ProductModel product;
 
-  final String url =
-      "https://cdn.dummyjson.com/products/images/beauty/Essence%20Mascara%20Lash%20Princess/1.png"; // Placeholder image for products
+  const ProductWidget({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       color: Colors.white,
-      elevation: 1,
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network(
-            url,
-            height: 150.0,
-            fit: BoxFit.cover,
-          ),
-          const SizedBox(height: 8.0),
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: Text(
-            "Product Name",
-            style: GoogleFonts.nunito(fontSize: 16.0, fontWeight: FontWeight.w600),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: Text(
-            "Brand Name",
-            style: GoogleFonts.nunito(fontSize: 10.0, fontWeight: FontWeight.normal),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0, left: 12.0),
-            child: Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            "49.9",
-                            style: GoogleFonts.nunito(
-                              fontSize: 10.0, color: Colors.grey, decoration: TextDecoration.lineThrough
-                            ),
-                          ),
-                          SizedBox(width: 4.0,),
-                          Text(
-                            "40.99",
-                            style: GoogleFonts.nunito(
-                              fontSize: 14.0, color: Colors.black, fontWeight: FontWeight.bold
-                            ),
-                          )
-                        ],
-                      ),
-                  
-                      Text(
-                            "12.9% OFF",
-                            style: GoogleFonts.nunito(
-                              fontSize: 10.0, color: Colors.red.shade400, fontWeight: FontWeight.bold
-                            ),
-                          )
-                      
-                    ],
+          // Stack to layer the product image and add to cart button
+          Stack(
+            clipBehavior: Clip.none, // Allows the button to be outside the image bounds
+            children: [
+              // Product Image
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
+                child: Image.network(
+                  product.thumbnail ?? '', // Fallback in case of null
+                  height: 150.0,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 150.0,
+                    color: Colors.grey.shade300,
+                    child: const Icon(
+                      Icons.broken_image,
+                      color: Colors.grey,
+                      size: 50.0,
+                    ),
                   ),
                 ),
-                Card.filled(
+              ),
+              // Add to Cart Button
+              Positioned(
+                bottom: 8.0, // Position the button at the bottom
+                right: 8.0, // Align it to the right of the image
+                child: Card(
                   shape: const CircleBorder(),
                   color: Colors.blueGrey,
                   child: IconButton(
-                    onPressed: (){}, 
+                    onPressed: () {
+                      // Handle "Add to Cart" action
+                    },
                     icon: const Icon(Icons.add),
                     color: Colors.white,
-                    iconSize: 24.0,
+                    iconSize: 18.0, // Smaller icon size
+                    constraints: const BoxConstraints(
+                      minWidth: 32.0, // Smaller width
+                      minHeight: 32.0, // Smaller height
+                    ),
+                    padding: const EdgeInsets.all(4.0), // Less padding for a compact look
                   ),
                 ),
-              
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8.0),
+
+          // Product Name
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              product.title ?? 'Unknown Product',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.nunito(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          // Brand Name
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              product.brand ?? 'Unknown Brand',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.nunito(
+                fontSize: 12.0,
+                fontWeight: FontWeight.normal,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
+
+          // Price and Discount
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Pricing Details
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Original Price
+                        if (product.discountPercentage != null)
+                          Text(
+                            '\$${(product.price ?? 0).toStringAsFixed(2)}',
+                            style: GoogleFonts.nunito(
+                              fontSize: 10.0,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        const SizedBox(width: 4.0),
+                        // Discounted Price
+                        Text(
+                          '\$${_calculateDiscountedPrice(product.price ?? 0, product.discountPercentage ?? 0).toStringAsFixed(2)}',
+                          style: GoogleFonts.nunito(
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Discount Percentage
+                    if (product.discountPercentage != null && product.discountPercentage! > 0)
+                      Text(
+                        '${product.discountPercentage!.toStringAsFixed(1)}% OFF',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade400,
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
-          )
-          
+          ),
         ],
       ),
     );
+  }
+
+  // Helper method to calculate discounted price
+  double _calculateDiscountedPrice(double price, double discountPercentage) {
+    return price - (price * discountPercentage / 100);
   }
 }

@@ -1,16 +1,10 @@
 abstract class ProductEvent {}
 
-class FetchProductEvent extends ProductEvent  {
-  final int page;
+class FetchProductDataEvent extends ProductEvent  {}
 
-  FetchProductEvent({required this.page});
-  
-}
+class FetchMorePorductsEvent extends ProductEvent {}
 
-class FetchProductCategoryEvent extends ProductEvent {
-}
-
-class SelectProductCategoryEvent extends ProductEvent {
-  final int index;
-  SelectProductCategoryEvent({required this.index});
+class FetchProductsByCategory extends ProductEvent {
+  final String url;
+  FetchProductsByCategory({ required this.url});
 }
