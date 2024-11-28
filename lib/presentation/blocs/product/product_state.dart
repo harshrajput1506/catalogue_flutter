@@ -29,9 +29,5 @@ class ProductCategoriesError extends ProductState{
   ProductCategoriesError({required this.message});
 }
 
-// class SelectedProductCategory extends ProductState {
-//   final int index;
-//   SelectedProductCategory({required this.index});
-// }
 
 

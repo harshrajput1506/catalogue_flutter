@@ -4,8 +4,9 @@ import 'package:catalogue_project/domain/models/product_model.dart';
 
 class ProductWidget extends StatelessWidget {
   final ProductModel product;
+  final Function() addToCart;
 
-  const ProductWidget({super.key, required this.product});
+  const ProductWidget({super.key, required this.product, required this.addToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +52,7 @@ class ProductWidget extends StatelessWidget {
                   child: IconButton(
                     onPressed: () {
                       // Handle "Add to Cart" action
+                      addToCart();
                     },
                     icon: const Icon(Icons.add),
                     color: Colors.white,
@@ -122,7 +124,7 @@ class ProductWidget extends StatelessWidget {
                         const SizedBox(width: 4.0),
                         // Discounted Price
                         Text(
-                          '\$${_calculateDiscountedPrice(product.price ?? 0, product.discountPercentage ?? 0).toStringAsFixed(2)}',
+                          '\$${product.discountedPrice.toStringAsFixed(2)}',
                           style: GoogleFonts.nunito(
                             fontSize: 14.0,
                             fontWeight: FontWeight.bold,
@@ -148,10 +150,5 @@ class ProductWidget extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // Helper method to calculate discounted price
-  double _calculateDiscountedPrice(double price, double discountPercentage) {
-    return price - (price * discountPercentage / 100);
   }
 }

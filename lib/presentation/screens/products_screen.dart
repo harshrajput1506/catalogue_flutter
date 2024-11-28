@@ -1,8 +1,13 @@
 import 'package:catalogue_project/core/constants.dart';
 import 'package:catalogue_project/domain/models/product_category_model.dart';
+import 'package:catalogue_project/domain/models/product_model.dart';
+import 'package:catalogue_project/presentation/blocs/cart/cart_bloc.dart';
+import 'package:catalogue_project/presentation/blocs/cart/cart_event.dart';
+import 'package:catalogue_project/presentation/blocs/cart/cart_state.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_bloc.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_event.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_state.dart';
+import 'package:catalogue_project/presentation/screens/cart_screen.dart';
 import 'package:catalogue_project/presentation/widgets/category_widget.dart';
 import 'package:catalogue_project/presentation/widgets/product_widget.dart';
 import 'package:flutter/material.dart';
@@ -35,8 +40,18 @@ class _ProductScreenState extends State<ProductScreen> {
   void _scrollListener() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent) {
-          if (isLoadMore) BlocProvider.of<ProductBloc>(context).add(FetchMorePorductsEvent());
+      if (isLoadMore)
+        BlocProvider.of<ProductBloc>(context).add(FetchMorePorductsEvent());
     }
+  }
+
+  void _addToCart(ProductModel product) {
+    BlocProvider.of<CartBloc>(context).add(AddProductEvent(product: product));
+  }
+
+  void _goToCartScreen() {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const CartScreen()));
   }
 
   @override
@@ -49,7 +64,8 @@ class _ProductScreenState extends State<ProductScreen> {
           children: [
             // App Bar
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 18.0),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 30.0, horizontal: 18.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -60,12 +76,55 @@ class _ProductScreenState extends State<ProductScreen> {
                       fontWeight: FontWeight.w400,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.shopping_cart),
-                    color: Colors.black87,
-                    tooltip: '0',
-                    iconSize: 28.0,
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // The Cart Icon
+                      IconButton(
+                        onPressed: () {
+                          // Navigate to cart screen
+                          _goToCartScreen();
+                        },
+                        icon: const Icon(Icons.shopping_cart),
+                        iconSize: 28.0,
+                        color: Colors.black87,
+                      ),
+
+                      // The Red Dot with Cart Items Count
+                      Positioned(
+                        right: 5,
+                        top:
+                            -1, // Adjust the position to place it above the icon
+                        child: BlocBuilder<CartBloc, CartState>(
+                          builder: (context, state) {
+                            if (state is UpdatedCart && state.cart.isNotEmpty) {
+                              final totalItems = state.cart.fold<int>(
+                                0,
+                                (sum, cartModel) => sum + cartModel.quantity,
+                              );
+
+                              return Container(
+                                padding: const EdgeInsets.all(4.0),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '$totalItems',
+                                  style: GoogleFonts.nunito(
+                                    color: Colors.white,
+                                    fontSize: 12.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox
+                                .shrink(); // Show nothing if cart is empty
+                          },
+                        ),
+                      ),
+                    ],
                   )
                 ],
               ),
@@ -93,16 +152,19 @@ class _ProductScreenState extends State<ProductScreen> {
                         isSelected: (index == _selectedCategoryIndex),
                         index: index,
                         onSelected: (selectedIndex) {
-                          setState(() => _selectedCategoryIndex = selectedIndex);
+                          setState(
+                              () => _selectedCategoryIndex = selectedIndex);
                           isLoadMore = selectedIndex == 0;
-                          if(selectedIndex == 0){
+                          if (selectedIndex == 0) {
                             BlocProvider.of<ProductBloc>(context).add(
-                            FetchProductDataEvent(),
-                          );
+                              FetchProductDataEvent(),
+                            );
                           } else {
                             BlocProvider.of<ProductBloc>(context).add(
-                            FetchProductsByCategory(url: _categories[selectedIndex].url ?? baseUrl),
-                          );
+                              FetchProductsByCategory(
+                                  url: _categories[selectedIndex].url ??
+                                      baseUrl),
+                            );
                           }
                         },
                       );
@@ -121,7 +183,8 @@ class _ProductScreenState extends State<ProductScreen> {
                       padding: const EdgeInsets.all(12.0),
                       child: GridView.builder(
                         controller: _scrollController,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           mainAxisSpacing: 4.0,
                           crossAxisSpacing: 4.0,
@@ -129,7 +192,10 @@ class _ProductScreenState extends State<ProductScreen> {
                         ),
                         itemCount: state.products.length,
                         itemBuilder: (context, index) {
-                          return ProductWidget(product: state.products[index]);
+                          return ProductWidget(
+                            product: state.products[index],
+                            addToCart: () => _addToCart(state.products[index]),
+                          );
                         },
                       ),
                     );
@@ -152,7 +218,6 @@ class _ProductScreenState extends State<ProductScreen> {
                 },
               ),
             ),
-
           ],
         ),
       ),

@@ -21,6 +21,8 @@ class ProductModel {
     required this.rating,
   });
 
+  double get discountedPrice => ((price ?? 0) * (1 - (discountPercentage ?? 0) / 100));
+
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: json['id'],
