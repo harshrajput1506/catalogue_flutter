@@ -1,7 +1,4 @@
-import 'package:catalogue_project/presentation/blocs/product/product_bloc.dart';
-import 'package:catalogue_project/presentation/blocs/product/product_event.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CategoryWidget extends StatelessWidget {

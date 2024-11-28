@@ -5,6 +5,7 @@ class ProductModel {
   String? description;
   String? image;
   String? thumbnail;
+  String? brand;
   double? price;
   double? discountPercentage;
   double? rating;
@@ -16,6 +17,7 @@ class ProductModel {
     required this.image,
     required this.thumbnail,
     required this.price,
+    required this.brand,
     required this.discountPercentage,
     required this.rating
   });
@@ -28,6 +30,7 @@ class ProductModel {
       image: json['images'], 
       thumbnail: json['thumbnail'], 
       price: json['price'],
+      brand: json['brand'],
       discountPercentage: json['discountPercentage'], 
       rating: json['rating']);
   }
@@ -41,7 +44,8 @@ class ProductModel {
       'thumbnail': thumbnail, 
       'price': price,
       'discountPercentage': discountPercentage, 
-      'rating': rating
+      'rating': rating,
+      'brand': brand
     };
   }
 

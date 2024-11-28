@@ -1,8 +1,8 @@
-import 'package:catalogue_project/domain/models/product_category_model.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_bloc.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_event.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_state.dart';
 import 'package:catalogue_project/presentation/widgets/category_widget.dart';
+import 'package:catalogue_project/presentation/widgets/product_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -55,7 +55,7 @@ class _ProductScreenState extends State<ProductScreen> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(30.0),
+                  padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 18.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -112,15 +112,15 @@ class _ProductScreenState extends State<ProductScreen> {
                 // GridView for products
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(30.0),
+                    padding: const EdgeInsets.only(top: 30.0, left: 12.0, right: 12.0),
                     child: GridView.builder(
                       scrollDirection: Axis.vertical,
                       controller: _scrollController,
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 12.0,
-                        crossAxisSpacing: 12.0,
-                        childAspectRatio: 0.8,
+                        mainAxisSpacing: 4.0,
+                        crossAxisSpacing:4.0,
+                        childAspectRatio: 0.6
                       ),
                       itemCount: 10, // Replace with the product list length
                       itemBuilder: (context, index) {
@@ -139,35 +139,3 @@ class _ProductScreenState extends State<ProductScreen> {
 }
 
 
-
-class ProductWidget extends StatelessWidget {
-  const ProductWidget({super.key});
-
-  final String url =
-      "https://cdn.dummyjson.com/products/images/beauty/Essence%20Mascara%20Lash%20Princess/1.png"; // Placeholder image for products
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 2.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Column(
-        children: [
-          Image.network(
-            url,
-            height: 160.0,
-            fit: BoxFit.cover,
-          ),
-          const SizedBox(height: 8.0),
-          Text(
-            "Product Name",
-            style: GoogleFonts.nunito(fontSize: 16.0, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-}
