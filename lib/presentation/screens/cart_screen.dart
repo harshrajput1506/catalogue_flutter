@@ -35,6 +35,19 @@ class _CartScreenState extends State<CartScreen> {
         .add(RemoveProductEvent(product: product));
   }
 
+  void _onCheckOut(){
+    BlocProvider.of<CartBloc>(context)
+        .add(CheckOutCartEvent());
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +84,13 @@ class _CartScreenState extends State<CartScreen> {
 
             // Product List Section
             Expanded(
-              child: BlocBuilder<CartBloc, CartState>(builder: (context, state) {
+              child: BlocConsumer<CartBloc, CartState>(
+                listener: (context, state) {
+                  if(state is CheckOut){
+                    _showSnackBar(context, "Checkout Complete!");
+                  }
+                },
+                builder: (context, state) {
                 if (state is UpdatedCart && state.cart.isNotEmpty) {
                   final totalItems = state.cart
                       .fold<int>(0, (sum, cartModel) => sum + cartModel.quantity);
@@ -125,7 +144,9 @@ class _CartScreenState extends State<CartScreen> {
                               ],
                             ),
                             ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _onCheckOut();
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red.shade400,
                                 foregroundColor: Colors.white,

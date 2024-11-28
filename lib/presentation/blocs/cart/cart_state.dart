@@ -11,3 +11,5 @@ class InitialCart extends CartState{
   final List<CartModel> cart;
   InitialCart({required this.cart});
 }
+
+class CheckOut extends CartState {}
