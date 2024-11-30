@@ -40,8 +40,7 @@ class _ProductScreenState extends State<ProductScreen> {
   void _scrollListener() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent) {
-      if (isLoadMore)
-        BlocProvider.of<ProductBloc>(context).add(FetchMorePorductsEvent());
+      if (isLoadMore) BlocProvider.of<ProductBloc>(context).add(FetchMorePorductsEvent());
     }
   }
 
