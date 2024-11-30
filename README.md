@@ -1,7 +1,3 @@
-Here’s your updated **README.md** file with the provided details and enhancements:
-
----
-
 # **Catalogue App**
 
 A Flutter-based catalogue app that displays a list of products, allows users to filter products by categories, and add items to a shopping cart. The app uses **BLoC** for state management, adheres to clean architecture principles, and ensures modularity for scalability.
