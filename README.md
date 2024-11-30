@@ -87,8 +87,9 @@ lib/
 |-----------------------------------------|-----------------------------------------|
 | ![Blog List](screenshots/ss1.jpg) | ![Blog Details](screenshots/ss2.jpg) |
 
-### **Demo GIF**
-![App Demo](screenshots/demo.mp4)
+### **Demo Video**
+
+<video src="screenshots/demo.mp4" controls="controls" style="max-width: 100%; height: auto;"> Your browser does not support the video tag. </video>
 
 ---
 
