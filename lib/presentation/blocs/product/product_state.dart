@@ -29,5 +29,10 @@ class ProductCategoriesError extends ProductState{
   ProductCategoriesError({required this.message});
 }
 
+class FilteredLoaded extends ProductState {
+  final List<ProductModel> products;
+  FilteredLoaded({required this.products});
+}
+
 
 

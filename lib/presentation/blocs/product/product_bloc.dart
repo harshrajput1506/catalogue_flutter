@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:catalogue_project/core/constants.dart';
 import 'package:catalogue_project/domain/models/product_category_model.dart';
+import 'package:catalogue_project/domain/models/product_model.dart';
 import 'package:catalogue_project/domain/repositories/product_repository.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_event.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_state.dart';
@@ -11,19 +14,21 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
   int page = 1;
   bool isFetchingMore = false;
 
+  List<ProductModel> _products = [];
+
   ProductBloc({required this.productRepo}) : super(ProductsLoading()) {
     on<FetchProductDataEvent>(_onFetchProductDataEvent);
     on<FetchMorePorductsEvent>(_onFetchMoreProductsEvent);
     on<FetchProductsByCategory>(_onFetchProductsByCategory);
+    on<FilteredProductsEvent>(_onFilteredProductsEvent);
   }
 
   /// Handles fetching initial categories and products
   Future<void> _onFetchProductDataEvent(
       FetchProductDataEvent event, Emitter<ProductState> emit) async {
-        emit(ProductsLoading());
-        emit(ProductCategoriesLoading());
+    emit(ProductsLoading());
+    emit(ProductCategoriesLoading());
     try {
-
       // Fetch categories
       final categories = await productRepo.getProductCategories();
       if (categories.isEmpty) {
@@ -39,6 +44,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         emit(ProductsError(message: "No products available"));
         return;
       }
+      _products = products;
       emit(ProductsLoaded(products: products));
       page++;
     } catch (error) {
@@ -46,9 +52,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     }
   }
 
-  Future<void> _onFetchProductsByCategory(FetchProductsByCategory event, Emitter<ProductState> emit) async {
+  Future<void> _onFetchProductsByCategory(
+      FetchProductsByCategory event, Emitter<ProductState> emit) async {
     // Reset page and fetch products for the selected category
-    page  = 1;
+    page = 1;
     try {
       // Fetch products by categories
       final products = await productRepo.getProductsByCategory(event.url);
@@ -56,11 +63,11 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         emit(ProductsError(message: "No products available"));
         return;
       }
+      _products = products;
       emit(ProductsLoaded(products: products));
     } catch (error) {
       emit(ProductsError(message: "Failed to load data: $error"));
     }
-
   }
 
   /// Handles fetching more products (pagination)
@@ -79,8 +86,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       // Append new products to the current state
       if (state is ProductsLoaded) {
         final currentProducts = (state as ProductsLoaded).products;
+        _products =  [...currentProducts, ...products];
         emit(ProductsLoaded(products: [...currentProducts, ...products]));
       } else {
+        _products = products;
         emit(ProductsLoaded(products: products));
       }
       page++;
@@ -89,5 +98,25 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     } finally {
       isFetchingMore = false;
     }
+  }
+
+  FutureOr<void> _onSearchProductEvent(
+      SearchProductEvent event, Emitter<ProductState> emit) {
+    if (event.list.isNotEmpty) {
+      emit(ProductsLoaded(products: event.list));
+    }
+  }
+
+  void _onFilteredProductsEvent(
+    FilteredProductsEvent event, Emitter<ProductState> emit
+  ) {
+    final filtered = _products.where((product) {
+      final name = (product.title != null) ? product.title!.toLowerCase() : "";
+      final brand = (product.brand != null) ? product.brand!.toLowerCase() : "";
+      final searchQuery = event.query.toLowerCase();
+
+      return name.contains(searchQuery) || brand.contains(searchQuery);
+    }).toList();
+    emit(FilteredLoaded(products: filtered));
   }
 }

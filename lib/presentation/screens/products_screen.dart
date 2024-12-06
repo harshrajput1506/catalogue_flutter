@@ -8,6 +8,7 @@ import 'package:catalogue_project/presentation/blocs/product/product_bloc.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_event.dart';
 import 'package:catalogue_project/presentation/blocs/product/product_state.dart';
 import 'package:catalogue_project/presentation/screens/cart_screen.dart';
+import 'package:catalogue_project/presentation/screens/search_screen.dart';
 import 'package:catalogue_project/presentation/widgets/category_widget.dart';
 import 'package:catalogue_project/presentation/widgets/product_widget.dart';
 import 'package:flutter/material.dart';
@@ -53,6 +54,11 @@ class _ProductScreenState extends State<ProductScreen> {
         context, MaterialPageRoute(builder: (context) => const CartScreen()));
   }
 
+  void _goToSearchScreen(){
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => const SearchScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +80,15 @@ class _ProductScreenState extends State<ProductScreen> {
                       fontSize: 42.0,
                       fontWeight: FontWeight.w400,
                     ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                          // Navigate to search screen
+                          _goToSearchScreen();
+                        },
+                        icon: const Icon(Icons.search),
+                        iconSize: 28.0,
+                        color: Colors.black87,
                   ),
                   Stack(
                     clipBehavior: Clip.none,
