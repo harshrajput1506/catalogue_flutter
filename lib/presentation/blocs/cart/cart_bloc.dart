@@ -47,7 +47,5 @@ class CartBloc extends Bloc<CartEvent, CartState> {
    void _checkOutCartEvent(CheckOutCartEvent event, Emitter<CartState> emit){
     cart.clear();
     emit(CheckOut());
-   }
-
-  
+   }  
 }
